@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { Editor, loader } from "@monaco-editor/react";
 import { Send, Terminal, Play, Square, Loader2, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -43,22 +44,51 @@ int main() {
   const [report, setReport] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-// Clean, hack-free initialization using the latest SDK
-  const { messages, append } = useChat({
-    body: { 
-      problem: {
-        title: currentProblem.title,
-        description: currentProblem.description
-      } 
-    }
+  // Timer States (45 minutes = 2700 seconds)
+  const [timeLeft, setTimeLeft] = useState(45 * 60);
+
+  // The new SDK v7+ syntax for passing a body payload
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      body: { 
+        problem: {
+          title: currentProblem.title,
+          description: currentProblem.description
+        } 
+      }
+    })
   });
+
+  // Timer Countdown Logic
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    // Only tick if the interview has started (messages exist) and hasn't ended
+    if (messages.length > 0 && !isInterviewEnded && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !isInterviewEnded) {
+      endInterview(); // Auto-fail/end when time runs out
+    }
+
+    return () => clearInterval(timer);
+  }, [messages.length, isInterviewEnded, timeLeft]);
+
+  // Helper function to format MM:SS
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
     
     const payload = `${input}\n\n###CODE_STATE_DO_NOT_SHOW_IN_UI###\n${code}`;
-    // Use append instead of sendMessage
-    append({ role: "user", content: payload });
+    // Use sendMessage with the 'text' property
+    sendMessage({ text: payload });
     setInput("");
     
     if (textareaRef.current) {
@@ -74,11 +104,9 @@ int main() {
   };
 
   const startInterview = () => {
-    // Use append instead of sendMessage
-    append({ role: "user", content: "Hello. I am ready to begin the technical interview." });
+    // Use sendMessage with the 'text' property
+    sendMessage({ text: "Hello. I am ready to begin the technical interview." });
   };
-
-  // ... rest of the component remains exactly the same
 
   const endInterview = async () => {
     setIsInterviewEnded(true);
@@ -179,13 +207,22 @@ int main() {
             <h1 className="font-semibold text-neutral-100 text-lg">AI Interviewer</h1>
           </div>
           {messages.length > 0 && (
-            <button 
-              onClick={endInterview}
-              className="flex items-center gap-2 text-sm bg-red-900/50 hover:bg-red-900 text-red-200 px-3 py-1.5 rounded-md transition-colors border border-red-800/50"
-            >
-              <Square size={14} />
-              End Interview
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Ticking Countdown Timer */}
+              <div className={`font-mono text-xl font-bold tracking-widest ${
+                timeLeft <= 300 ? 'text-red-500 animate-pulse' : 'text-emerald-400'
+              }`}>
+                {formatTime(timeLeft)}
+              </div>
+              
+              <button 
+                onClick={endInterview}
+                className="flex items-center gap-2 text-sm bg-red-900/50 hover:bg-red-900 text-red-200 px-3 py-1.5 rounded-md transition-colors border border-red-800/50"
+              >
+                <Square size={14} />
+                End Interview
+              </button>
+            </div>
           )}
         </div>
 
