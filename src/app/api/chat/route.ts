@@ -1,5 +1,5 @@
 import { streamText, convertToModelMessages, tool, isStepCount } from "ai";
-import { google } from "@ai-sdk/google";
+import { getRandomGoogleProvider } from "@/lib/gemini";
 import { z } from "zod";
 
 
@@ -48,8 +48,10 @@ Test Cases: ${JSON.stringify(problem.testCases || [])}
 
 Wait for the candidate to say they are ready before revealing the problem.`;
 
+  const customGoogle = getRandomGoogleProvider();
+
   const result = streamText({
-    model: google("gemini-2.5-flash"),
+    model: customGoogle("gemini-2.5-flash"),
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
     stopWhen: isStepCount(5),

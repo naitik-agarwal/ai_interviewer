@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getRandomGoogleProvider } from "@/lib/gemini";
 import { z } from "zod";
 import { problems } from "@/lib/problems";
 
@@ -24,8 +24,10 @@ export async function POST(req: Request) {
       return Response.json({ error: "Problem or test cases not found" }, { status: 400 });
     }
 
+    const customGoogle = getRandomGoogleProvider();
+
     const { object } = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: customGoogle("gemini-2.5-flash"),
       system: EVALUATOR_PROMPT,
       prompt: `Language: ${language}\n\nProblem Description: ${problem.description}\n\nCandidate Code:\n${code}\n\nTest Cases to Evaluate:\n${JSON.stringify(problem.testCases, null, 2)}`,
       schema: z.object({

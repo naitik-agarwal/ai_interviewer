@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getRandomGoogleProvider } from "@/lib/gemini";
 import { z } from "zod";
 
 export const maxDuration = 60;
@@ -24,8 +24,10 @@ export async function POST(req: Request) {
       })
       .join("\n\n-------------------\n\n");
 
+    const customGoogle = getRandomGoogleProvider();
+
     const { object } = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: customGoogle("gemini-2.5-flash"),
       system: EVALUATOR_PROMPT,
       prompt: `Here is the full interview transcript and code history to evaluate:\n\n${transcriptText}`,
       schema: z.object({
