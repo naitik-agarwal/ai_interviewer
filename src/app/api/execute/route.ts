@@ -2,11 +2,27 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { code, stdin = "" } = await req.json();
+    const { code, stdin = "", language = "cpp" } = await req.json();
 
     if (!code) {
       return NextResponse.json({ error: "Code is required" }, { status: 400 });
     }
+
+    // Map UI language to Piston language
+    const pistonLangMap: Record<string, string> = {
+      cpp: "c++",
+      python: "python",
+      javascript: "javascript"
+    };
+
+    const pistonFileMap: Record<string, string> = {
+      cpp: "main.cpp",
+      python: "main.py",
+      javascript: "main.js"
+    };
+
+    const pistonLang = pistonLangMap[language] || "c++";
+    const pistonFile = pistonFileMap[language] || "main.cpp";
 
     // Call the public Piston API for secure, remote execution
     const response = await fetch("https://emkc.org/api/v2/piston/execute", {
@@ -15,11 +31,11 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        language: "c++",
+        language: pistonLang,
         version: "*",
         files: [
           {
-            name: "main.cpp",
+            name: pistonFile,
             content: code,
           },
         ],

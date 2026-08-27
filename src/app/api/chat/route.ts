@@ -15,6 +15,8 @@ export async function POST(req: Request) {
     description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume exactly one solution, and you may not use the same element twice."
   };
 
+  const language = body.language || "cpp";
+
   // Extract the latest code state from the last user message
   let latestCode = "";
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -36,7 +38,7 @@ CRITICAL BEHAVIOR RULES:
 2. CONCISENESS: Never repeat yourself. Never duplicate sentences. Keep your responses extremely brief, single-spaced, and blunt.
 3. BE DIRECT: Speak in short, professional sentences. Get straight to the point. Do not compliment excessively.
 4. NEVER GIVE THE ANSWER: If they are stuck, give a vague hint and dock their score.
-5. RUTHLESS CODE REVIEW: When the candidate writes code, act like a strict C++ compiler and code reviewer.
+5. RUTHLESS CODE REVIEW: When the candidate writes code, act like a strict ${language} compiler and code reviewer.
 6. TIME AWARENESS: The candidate's messages contain a hidden \`###TIME_LEFT_MINUTES###\` block. Only mention time if there is less than 10 minutes remaining. If there is >10 mins, do NOT mention time.
 7. AUTOMATED TESTING: If the candidate says they are done, or asks to run tests, use the \`evaluate_test_cases\` tool to evaluate their code logic against the problem's hidden test cases and show the results in the UI.
 

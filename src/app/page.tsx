@@ -16,23 +16,20 @@ export default function InterviewerDashboard() {
   // Randomly select a problem on initial load
   const [currentProblem] = useState(() => problems[Math.floor(Math.random() * problems.length)]);
   
-  // UX Fix: Use a generic C++ boilerplate instead of the spoiling starter code
-  const [code, setCode] = useState<string>(
-`#include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_map>
+  const [language, setLanguage] = useState<string>("cpp");
+  
+  const boilerplates: Record<string, string> = {
+    cpp: `#include <iostream>\n#include <vector>\n#include <string>\n#include <unordered_map>\n\nusing namespace std;\n\n// Wait for the interviewer to provide the problem,\n// then write your optimal solution here...\n\nint main() {\n    \n    return 0;\n}`,
+    python: `def main():\n    # Wait for the interviewer to provide the problem,\n    # then write your optimal solution here...\n    pass\n\nif __name__ == "__main__":\n    main()`,
+    javascript: `function main() {\n    // Wait for the interviewer to provide the problem,\n    // then write your optimal solution here...\n}\n\nmain();`
+  };
 
-using namespace std;
+  const [code, setCode] = useState<string>(boilerplates[language]);
 
-// Wait for the interviewer to provide the problem,
-// then write your optimal solution here...
-
-int main() {
-    
-    return 0;
-}`
-  );
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    setCode(boilerplates[newLang]);
+  };
   
   const [input, setInput] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -58,7 +55,8 @@ int main() {
         problem: {
           title: currentProblem.title,
           description: currentProblem.description
-        } 
+        },
+        language: language
       }
     })
   });
@@ -156,7 +154,7 @@ int main() {
       const response = await fetch("/api/run-tests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, problemId: currentProblem.id }),
+        body: JSON.stringify({ code, problemId: currentProblem.id, language }),
       });
       const data = await response.json();
       
@@ -434,7 +432,15 @@ int main() {
         <div className="border-b border-neutral-800 p-4 bg-neutral-900 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-neutral-100 text-base">Code Scratchpad</h2>
-            <span className="text-xs text-neutral-500 font-mono bg-neutral-800 px-2 py-0.5 rounded">C++</span>
+            <select
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="text-xs text-neutral-300 font-mono bg-neutral-800 px-2 py-1 rounded border border-neutral-700 outline-none focus:border-emerald-500"
+            >
+              <option value="cpp">C++</option>
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+            </select>
           </div>
           <button
             onClick={runTests}
@@ -448,7 +454,7 @@ int main() {
         <div className="flex-1">
           <Editor
             height="100%"
-            defaultLanguage="cpp"
+            language={language}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value || "")}

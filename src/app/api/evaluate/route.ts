@@ -5,7 +5,7 @@ import { z } from "zod";
 export const maxDuration = 60;
 
 const EVALUATOR_PROMPT = `You are a strict FAANG Hiring Committee reviewing a candidate's complete technical interview transcript.
-Analyze the entire conversation between the Interviewer and the Candidate, including the submitted C++ code states.
+Analyze the entire conversation between the Interviewer and the Candidate, including the submitted code states.
 
 Be brutally honest and actionable. Keep your summary and bullet points extremely concise. Do not write lengthy paragraphs.`;
 
