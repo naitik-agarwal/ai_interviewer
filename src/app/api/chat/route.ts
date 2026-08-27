@@ -51,7 +51,7 @@ Wait for the candidate to say they are ready before revealing the problem.`;
   const customGoogle = getRandomGoogleProvider();
 
   const result = streamText({
-    model: customGoogle("gemini-2.5-flash"),
+    model: customGoogle("gemini-3.6-flash"),
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
     stopWhen: isStepCount(5),

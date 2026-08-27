@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const customGoogle = getRandomGoogleProvider();
 
     const { object } = await generateObject({
-      model: customGoogle("gemini-2.5-flash"),
+      model: customGoogle("gemini-3.6-flash"),
       system: EVALUATOR_PROMPT,
       prompt: `Here is the full interview transcript and code history to evaluate:\n\n${transcriptText}`,
       schema: z.object({

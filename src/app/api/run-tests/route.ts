@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const customGoogle = getRandomGoogleProvider();
 
     const { object } = await generateObject({
-      model: customGoogle("gemini-2.5-flash"),
+      model: customGoogle("gemini-3.6-flash"),
       system: EVALUATOR_PROMPT,
       prompt: `Language: ${language}\n\nProblem Description: ${problem.description}\n\nCandidate Code:\n${code}\n\nTest Cases to Evaluate:\n${JSON.stringify(problem.testCases, null, 2)}`,
       schema: z.object({
