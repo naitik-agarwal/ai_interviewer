@@ -1,13 +1,7 @@
 import { streamText, convertToModelMessages, tool, isStepCount } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
-import { exec } from "child_process";
-import fs from "fs/promises";
-import path from "path";
-import os from "os";
-import util from "util";
 
-const execAsync = util.promisify(exec);
 
 export const maxDuration = 30;
 

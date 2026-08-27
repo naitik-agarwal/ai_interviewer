@@ -1,11 +1,4 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import fs from "fs/promises";
-import path from "path";
-import os from "os";
-import util from "util";
-
-const execAsync = util.promisify(exec);
 
 export async function POST(req: Request) {
   try {
@@ -15,47 +8,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Code is required" }, { status: 400 });
     }
 
-    // Local execution fallback to replace whitelist-only Piston API
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "code-exec-"));
-    const sourceFile = path.join(tmpDir, "main.cpp");
-    const exeFile = path.join(tmpDir, "main.out");
+    // Call the public Piston API for secure, remote execution
+    const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        language: "c++",
+        version: "*",
+        files: [
+          {
+            name: "main.cpp",
+            content: code,
+          },
+        ],
+        stdin: stdin,
+      }),
+    });
 
-    await fs.writeFile(sourceFile, code);
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Execution service is currently unavailable." },
+        { status: 502 }
+      );
+    }
 
-    // Compile
-    try {
-      await execAsync(`g++ ${sourceFile} -o ${exeFile}`);
-    } catch (compileError: any) {
-      await fs.rm(tmpDir, { recursive: true, force: true });
+    const data = await response.json();
+
+    if (data.compile && data.compile.code !== 0) {
       return NextResponse.json({
-        compile: { output: compileError.stderr || compileError.message },
+        compile: { output: data.compile.output },
       });
     }
 
-    // Run
-    let stdout = "";
-    let stderr = "";
-    try {
-      if (stdin) {
-        const inFile = path.join(tmpDir, "input.txt");
-        await fs.writeFile(inFile, stdin);
-        const { stdout: runOut, stderr: runErr } = await execAsync(`${exeFile} < ${inFile}`, { timeout: 3000 });
-        stdout = runOut;
-        stderr = runErr;
-      } else {
-        const { stdout: runOut, stderr: runErr } = await execAsync(`${exeFile}`, { timeout: 3000 });
-        stdout = runOut;
-        stderr = runErr;
-      }
-    } catch (runError: any) {
-      stderr = runError.stderr || runError.message;
-    }
-
-    // Cleanup
-    await fs.rm(tmpDir, { recursive: true, force: true });
-
     return NextResponse.json({
-      run: { stdout, stderr },
+      run: {
+        stdout: data.run.stdout,
+        stderr: data.run.stderr,
+      },
     });
   } catch (error: any) {
     return NextResponse.json(
