@@ -51,7 +51,7 @@ int main() {
   const [timeLeft, setTimeLeft] = useState(45 * 60);
 
   // The new SDK v7+ syntax for passing a body payload
-  const { messages, sendMessage } = useChat({
+  const { messages, sendMessage, error: chatError } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       body: { 
@@ -393,7 +393,12 @@ int main() {
         </div>
 
         {/* Chat Input */}
-        <div className="p-4 bg-neutral-900 border-t border-neutral-800">
+        <div className="p-4 bg-neutral-900 border-t border-neutral-800 flex flex-col gap-3">
+          {chatError && (
+            <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">
+              Error: {chatError.message}
+            </div>
+          )}
           <div className="flex gap-3 items-end">
             <textarea
               ref={textareaRef}
